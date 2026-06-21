@@ -3,34 +3,9 @@ const router = express.Router();
 const db = require('../db');
 const { verifyToken, verifyAdmin } = require('../middleware/auth');
 
-// POST /bookings – Book a room (logged-in customers)
-router.post('/', verifyToken, async (req, res) => {
-    try {
-        const { room_id, check_in, check_out } = req.body;
-        const user_id = req.user.id;
 
-        // Check if room exists and is available
-        const [rooms] = await db.query(
-            'SELECT * FROM rooms WHERE id = ? AND is_available = TRUE', [room_id]
-        );
-        if (rooms.length === 0) {
-            return res.status(400).json({ message: 'Room not available' });
-        }
 
-        // Create the booking
-        await db.query(
-            'INSERT INTO bookings (user_id, room_id, check_in, check_out) VALUES (?, ?, ?, ?)',
-            [user_id, room_id, check_in, check_out]
-        );
-
-        res.status(201).json({ message: 'Room booked successfully!' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-// GET /my-bookings – See my bookings (logged-in customer)
+// // GET /my-bookings – See my bookings (logged-in customer)
 router.get('/my-bookings', verifyToken, async (req, res) => {
     try {
         const [bookings] = await db.query(
@@ -46,6 +21,42 @@ router.get('/my-bookings', verifyToken, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
+    }
+});
+// POST /bookings – Book a room (logged-in customers)
+router.post('/', verifyToken, async (req, res) => {
+    try {
+        const { room_id, check_in, check_out } = req.body;
+
+        const user_id = req.user.id;
+
+        // Check if room exists
+        const [rooms] = await db.query(
+            'SELECT * FROM rooms WHERE id = ?',
+            [room_id]
+        );
+
+        if (rooms.length === 0) {
+            return res.status(404).json({
+                message: 'Room not found'
+            });
+        }
+
+        // Create booking
+        await db.query(
+            'INSERT INTO bookings (user_id, room_id, check_in, check_out) VALUES (?, ?, ?, ?)',
+            [user_id, room_id, check_in, check_out]
+        );
+
+        res.status(201).json({
+            message: 'Room booked successfully!'
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: 'Server error'
+        });
     }
 });
 

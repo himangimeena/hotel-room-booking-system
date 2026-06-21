@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-
+console.log("JWT_SECRET =", process.env.JWT_SECRET);
 // This function checks if the user is logged in (has a valid token)
 function verifyToken(req, res, next) {
     // Get the token from the request header
