@@ -1,0 +1,252 @@
+/* Azure Haven - Dark Navy + Gold Theme */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --navy: #0d1117;
+    --navy-light: #1a2332;
+    --gold: #c9a84c;
+    --gold-light: #e8c668;
+    --white: #ffffff;
+    --gray: #8892a0;
+    --card-bg: #161f2e;
+}
+
+body {
+    background-color: var(--navy);
+    color: var(--white);
+    font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh;
+}
+
+/* ─── NAVBAR ─── */
+.navbar {
+    background-color: var(--navy);
+    border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+    padding: 15px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar .logo {
+    color: var(--gold);
+    font-size: 1.4rem;
+    font-weight: bold;
+    letter-spacing: 3px;
+    text-decoration: none;
+}
+
+.navbar .nav-links a {
+    color: var(--white);
+    text-decoration: none;
+    margin-left: 25px;
+    font-size: 0.9rem;
+    transition: color 0.3s;
+}
+
+.navbar .nav-links a:hover {
+    color: var(--gold);
+}
+
+.btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: #000;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
+}
+
+/* ─── ROOM CARDS ─── */
+.room-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(201, 168, 76, 0.15);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    transition: border-color 0.3s;
+}
+
+.room-card:hover {
+    border-color: var(--gold);
+}
+
+.room-card .room-info h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.room-card .room-info p {
+    color: var(--gray);
+    font-size: 0.85rem;
+}
+
+.room-card .room-price {
+    color: var(--gold);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* ─── AUTH FORMS ─── */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(rgba(13,17,23,0.7), rgba(13,17,23,0.9)),
+                url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920') center/cover;
+}
+
+.auth-card {
+    background: rgba(22, 31, 46, 0.95);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 480px;
+    backdrop-filter: blur(10px);
+}
+
+.auth-card h2 {
+    text-align: center;
+    color: var(--white);
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+}
+
+.auth-card .subtitle {
+    text-align: center;
+    color: var(--gray);
+    margin-bottom: 30px;
+    font-size: 0.9rem;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    color: var(--gray);
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    border-radius: 8px;
+    color: var(--white);
+    font-size: 0.95rem;
+    transition: border-color 0.3s;
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: var(--gold);
+}
+
+.btn-gold-full {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: opacity 0.3s;
+}
+
+.btn-gold-full:hover {
+    opacity: 0.9;
+}
+
+.auth-link {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+.auth-link a {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+}
+
+.alert-error {
+    background: rgba(220, 38, 38, 0.2);
+    border: 1px solid rgba(220, 38, 38, 0.4);
+    color: #fca5a5;
+}
+
+.alert-success {
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: #86efac;
+}
+
+/* ─── STATUS BADGES ─── */
+.badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.badge-booked {
+    background: rgba(201, 168, 76, 0.2);
+    color: var(--gold);
+    border: 1px solid var(--gold);
+}
+
+.badge-cancelled {
+    background: rgba(100, 100, 100, 0.2);
+    color: var(--gray);
+    border: 1px solid var(--gray);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 12px 16px;
+    }
+    .auth-card {
+        margin: 20px;
+        padding: 28px 20px;
+    }
+    .room-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}

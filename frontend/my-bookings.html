@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Haven – My Bookings</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="rooms.html" class="logo">AZURE HAVEN</a>
+        <div class="nav-links">
+            <a href="rooms.html">Rooms</a>
+            <a href="my-bookings.html" style="color:var(--gold);">My Stay</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div style="padding: 40px 30px; max-width: 900px; margin: 0 auto;">
+        <h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 30px;">MY BOOKINGS</h1>
+
+        <div id="bookings-list">
+            <p style="color: var(--gray);">Loading your bookings...</p>
+        </div>
+    </div>
+
+    <script src="js/bookings.js"></script>
+</body>
+</html>
