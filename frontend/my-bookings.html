@@ -1,29 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Azure Haven – My Bookings</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azure Haven – My Bookings</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-    <nav class="navbar">
-        <a href="rooms.html" class="logo">AZURE HAVEN</a>
-        <div class="nav-links">
-            <a href="rooms.html">Rooms</a>
-            <a href="my-bookings.html" style="color:var(--gold);">My Stay</a>
-            <a href="#" onclick="logout()">Logout</a>
+
+<!-- ════════════════════════════════════════════
+     MY BOOKINGS PAGE (Customer)
+     APIs used:
+       GET   /bookings/my-bookings     → list my bookings
+       PATCH /bookings/:id/cancel      → cancel a booking
+════════════════════════════════════════════ -->
+
+<!-- ── NAVBAR ────────────────────────────────── -->
+<nav class="navbar">
+  <a class="navbar-logo" href="rooms.html">AZURE HAVEN</a>
+
+  <div class="navbar-links">
+    <a href="rooms.html">Rooms</a>
+    <a href="my-bookings.html" class="active">My Stay</a>
+    <a href="#" onclick="logout()">Logout</a>
+  </div>
+
+  <button class="hamburger" id="ham" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-nav" id="mobile-nav">
+  <a href="rooms.html" onclick="closeMenu()">🏠 Rooms</a>
+  <a href="my-bookings.html" onclick="closeMenu()">🛏 My Stay</a>
+  <a href="#" onclick="logout()">🚪 Logout</a>
+</div>
+
+<!-- ── MAIN CONTENT ───────────────────────────── -->
+<main class="page-wrap">
+  <div class="page-header">
+    <h1 class="page-title uppercase-wide">My Bookings</h1>
+    <p class="muted-text">Your reservation history at Azure Haven</p>
+  </div>
+
+  <!-- Global page alert (e.g. cancel confirmation) -->
+  <div id="page-msg" class="alert"></div>
+
+  <!-- Booking list renders here -->
+  <div id="bookings-list"></div>
+</main>
+
+<footer class="footer">
+  &copy; 2024 Azure Haven Resort &amp; Spa — All rights reserved
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+
+  requireLogin();
+
+  const toggleMenu = () => document.getElementById('mobile-nav').classList.toggle('open');
+  const closeMenu  = () => document.getElementById('mobile-nav').classList.remove('open');
+
+  // ── Load bookings ──────────────────────────────
+  async function loadBookings() {
+    const list = document.getElementById('bookings-list');
+    list.innerHTML = spinnerHTML();
+
+    try {
+      const bookings = await apiFetch('/bookings/my-bookings');
+
+      if (!bookings.length) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🛏️</div>
+            <p>You have no bookings yet.</p>
+            <a href="rooms.html" class="btn btn-gold">Explore Rooms</a>
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = bookings.map(b => `
+        <div class="booking-card" id="booking-${b.id}">
+
+          <div class="booking-card-icon">🛏</div>
+
+          <div class="booking-card-body">
+            <h3>Room ${b.room_number}
+              <span style="color:var(--text-muted); font-weight:400; font-size:0.85rem;">
+                — ${b.room_type}
+              </span>
+            </h3>
+            <p>
+              Check In:&nbsp;&nbsp;${fmtDate(b.check_in)}<br>
+              Check Out: ${fmtDate(b.check_out)}
+            </p>
+            <p class="price-tag">
+              ₹${Number(b.price).toLocaleString('en-IN')} / night
+            </p>
+          </div>
+
+          <div class="booking-card-right">
+            <span class="badge badge-${b.status}">
+              ${b.status.toUpperCase()}
+            </span>
+            ${b.status === 'booked'
+              ? `<button class="btn-danger-outline"
+                         onclick="cancelBooking(${b.id}, 'Room ${b.room_number}')">
+                   Cancel
+                 </button>`
+              : ''}
+          </div>
+
         </div>
-    </nav>
+      `).join('');
 
-    <div style="padding: 40px 30px; max-width: 900px; margin: 0 auto;">
-        <h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 30px;">MY BOOKINGS</h1>
+    } catch (err) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">⚠️</div>
+          <p style="color:#ef4444;">Could not load bookings: ${err.message}</p>
+        </div>`;
+    }
+  }
 
-        <div id="bookings-list">
-            <p style="color: var(--gray);">Loading your bookings...</p>
-        </div>
-    </div>
+  // ── Cancel booking ─────────────────────────────
+  async function cancelBooking(id, label) {
+    if (!confirm(`Cancel your booking for ${label}?`)) return;
 
-    <script src="js/bookings.js"></script>
+    try {
+      await apiFetch(`/bookings/${id}/cancel`, { method: 'PATCH' });
+      showAlert('page-msg', `${label} booking cancelled successfully.`, 'success');
+      loadBookings(); // refresh the list
+    } catch (err) {
+      showAlert('page-msg', `Could not cancel: ${err.message}`);
+    }
+  }
+
+  // ── Init ───────────────────────────────────────
+  loadBookings();
+
+</script>
 </body>
 </html>
