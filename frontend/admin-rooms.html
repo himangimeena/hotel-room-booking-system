@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azure Haven – Room Management</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     ROOM MANAGEMENT
+     APIs used:
+       GET    /rooms/admin           → list all rooms (admin view)
+       POST   /rooms                 → add room
+       PUT    /rooms/:id             → edit room
+       PATCH  /rooms/:id/status      → change status
+       DELETE /rooms/:id             → delete room
+════════════════════════════════════════════ -->
+
+<div class="admin-shell">
+  <div id="admin-shell-mount"></div>
+
+  <main class="admin-main">
+    <h1 class="admin-page-title">Room Management</h1>
+    <p class="admin-page-sub">Add, edit, and manage room availability</p>
+
+    <!-- Add Room button -->
+    <div style="margin-bottom:20px;">
+      <button class="btn btn-gold" onclick="togglePanel('add-panel')">+ Add New Room</button>
+    </div>
+
+    <!-- ADD ROOM PANEL -->
+    <div class="form-panel" id="add-panel">
+      <h3 class="form-panel-title">Add New Room</h3>
+      <div id="add-msg" class="alert"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Room Number</label>
+          <input class="form-control" type="text" id="add-number" placeholder="e.g. 106" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Room Type</label>
+          <select class="form-control" id="add-type">
+            <option value="Single Room">Single Room</option>
+            <option value="Double Room">Double Room</option>
+            <option value="Deluxe Suite">Deluxe Suite</option>
+            <option value="Ocean View">Ocean View</option>
+            <option value="Presidential Suite">Presidential Suite</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Price per Night (₹)</label>
+          <input class="form-control" type="number" id="add-price" placeholder="e.g. 4500" min="1" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input class="form-control" type="text" id="add-desc" placeholder="Short description" />
+        </div>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button class="btn btn-gold" onclick="addRoom()">Add Room</button>
+        <button class="btn btn-outline" onclick="closeAllPanels()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- EDIT ROOM PANEL (opened from table) -->
+    <div class="form-panel" id="edit-panel">
+      <h3 class="form-panel-title">Edit Room <span id="edit-room-label" class="gold-text"></span></h3>
+      <div id="edit-msg" class="alert"></div>
+      <input type="hidden" id="edit-id" />
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Room Number</label>
+          <input class="form-control" type="text" id="edit-number" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Room Type</label>
+          <select class="form-control" id="edit-type">
+            <option value="Single Room">Single Room</option>
+            <option value="Double Room">Double Room</option>
+            <option value="Deluxe Suite">Deluxe Suite</option>
+            <option value="Ocean View">Ocean View</option>
+            <option value="Presidential Suite">Presidential Suite</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Price (₹)</label>
+          <input class="form-control" type="number" id="edit-price" min="1" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input class="form-control" type="text" id="edit-desc" />
+        </div>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button class="btn btn-gold" onclick="saveEditRoom()">Save Changes</button>
+        <button class="btn btn-outline" onclick="closeAllPanels()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Rooms table -->
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Room</th>
+            <th>Price / Night</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rooms-tbody">
+          <!-- filled by JS -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- admin-rooms.html — replace the JS block with this fixed version -->
+<script src="js/api.js"></script>
+<script src="js/admin-sidebar.js"></script>
+<script src="js/room-images.js"></script>
+<script>
+
+  requireAdmin();
+
+  // ── Safe room data store — avoids JSON.stringify in onclick attributes
+  const roomCache = {};
+
+  const allPanels = ['add-panel', 'edit-panel'];
+  function togglePanel(id) {
+    allPanels.forEach(p => document.getElementById(p).classList.toggle('open', p === id));
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function closeAllPanels() {
+    allPanels.forEach(p => document.getElementById(p).classList.remove('open'));
+  }
+
+  async function loadRooms() {
+    const tbody = document.getElementById('rooms-tbody');
+    tbody.innerHTML = `<tr><td colspan="4">${spinnerHTML()}</td></tr>`;
+
+    try {
+      const rooms = await apiFetch('/rooms/admin');
+
+      if (!rooms.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="muted-text" style="padding:30px; text-align:center;">No rooms added yet.</td></tr>`;
+        return;
+      }
+
+      // Cache rooms by id for safe retrieval in openEdit()
+      rooms.forEach(r => roomCache[r.id] = r);
+
+      tbody.innerHTML = rooms.map(room => `
+        <tr id="room-row-${room.id}">
+          <td>
+            <div class="room-thumb-cell">
+              <img class="room-thumb"
+                src="${getRoomImage(room.room_type)}"
+                alt="${room.room_type}"
+                onerror="this.src='images/rooms/single-room.jpg'" />
+              <div class="room-thumb-info">
+                <div class="rt-number">Room ${room.room_number}</div>
+                <div class="rt-type">${room.room_type}</div>
+              </div>
+            </div>
+          </td>
+          <td class="gold-text" style="font-weight:600;">
+            ₹${Number(room.price).toLocaleString('en-IN')}
+          </td>
+          <td>
+            <select class="status-select"
+              onchange="changeStatus(${room.id}, this.value, '${room.room_number}')">
+              <option value="available"   ${room.status === 'available'   ? 'selected' : ''}>✅ Available</option>
+              <option value="occupied"    ${room.status === 'occupied'    ? 'selected' : ''}>🛏 Occupied</option>
+              <option value="maintenance" ${room.status === 'maintenance' ? 'selected' : ''}>🔧 Maintenance</option>
+            </select>
+          </td>
+          <td>
+            <div class="row-actions">
+              <!-- FIXED: use id lookup instead of JSON.stringify in onclick -->
+              <button class="mini-btn mini-btn-edit" onclick="openEdit(${room.id})">Edit</button>
+              <button class="mini-btn mini-btn-delete" onclick="deleteRoom(${room.id}, '${room.room_number}')">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger); padding:20px;">Error: ${err.message}</td></tr>`;
+    }
+  }
+
+  async function addRoom() {
+    hideAlert('add-msg');
+    const room_number = document.getElementById('add-number').value.trim();
+    const room_type   = document.getElementById('add-type').value;
+    const price       = Number(document.getElementById('add-price').value);
+    const description = document.getElementById('add-desc').value.trim();
+
+    if (!room_number || !price) return showAlert('add-msg', 'Room number and price are required.');
+    if (price <= 0) return showAlert('add-msg', 'Price must be greater than 0.');
+
+    try {
+      const data = await apiFetch('/rooms', {
+        method: 'POST',
+        body: JSON.stringify({ room_number, room_type, price, description })
+      });
+      showAlert('add-msg', `✅ ${data.message}`, 'success');
+      ['add-number','add-price','add-desc'].forEach(id => document.getElementById(id).value = '');
+      loadRooms();
+    } catch (err) {
+      showAlert('add-msg', err.message);
+    }
+  }
+
+  // FIXED: accepts id, looks up from cache — no JSON in onclick attributes
+  function openEdit(roomId) {
+    const room = roomCache[roomId];
+    if (!room) return;
+    document.getElementById('edit-id').value          = room.id;
+    document.getElementById('edit-room-label').textContent = `#${room.room_number}`;
+    document.getElementById('edit-number').value      = room.room_number;
+    document.getElementById('edit-type').value        = room.room_type;
+    document.getElementById('edit-price').value       = room.price;
+    document.getElementById('edit-desc').value        = room.description || '';
+    hideAlert('edit-msg');
+    togglePanel('edit-panel');
+  }
+
+  async function saveEditRoom() {
+    hideAlert('edit-msg');
+    const id          = document.getElementById('edit-id').value;
+    const room_number = document.getElementById('edit-number').value.trim();
+    const room_type   = document.getElementById('edit-type').value;
+    const price       = Number(document.getElementById('edit-price').value);
+    const description = document.getElementById('edit-desc').value.trim();
+
+    try {
+      const data = await apiFetch(`/rooms/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ room_number, room_type, price, description })
+      });
+      showAlert('edit-msg', `✅ ${data.message}`, 'success');
+      setTimeout(() => { closeAllPanels(); loadRooms(); }, 1000);
+    } catch (err) {
+      showAlert('edit-msg', err.message);
+    }
+  }
+
+  async function changeStatus(id, status, roomNumber) {
+    try {
+      await apiFetch(`/rooms/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      });
+      const row = document.getElementById(`room-row-${id}`);
+      if (row) {
+        row.style.background = 'rgba(34,197,94,0.08)';
+        setTimeout(() => row.style.background = '', 800);
+      }
+    } catch (err) {
+      alert(`Could not update status for Room ${roomNumber}: ${err.message}`);
+      loadRooms();
+    }
+  }
+
+  async function deleteRoom(id, roomNumber) {
+    if (!confirm(`Delete Room ${roomNumber}? This cannot be undone.`)) return;
+    try {
+      await apiFetch(`/rooms/${id}`, { method: 'DELETE' });
+      loadRooms();
+    } catch (err) {
+      alert(`Could not delete: ${err.message}`);
+    }
+  }
+
+  loadRooms();
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azure Haven – Reports</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     REPORTS PAGE
+     API used: GET /revenue/reports
+════════════════════════════════════════════ -->
+
+<div class="admin-shell">
+  <div id="admin-shell-mount"></div>
+
+  <main class="admin-main">
+    <h1 class="admin-page-title">Reports</h1>
+    <p class="admin-page-sub">Performance insights across rooms and occupancy</p>
+
+    <div class="report-grid" id="reports-grid">
+      <!-- filled by JS -->
+    </div>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/admin-sidebar.js"></script>
+<script src="js/room-images.js"></script>
+<script>
+
+  requireAdmin();
+
+  async function loadReports() {
+    const grid = document.getElementById('reports-grid');
+    grid.innerHTML = spinnerHTML();
+
+    try {
+      const r = await apiFetch('/revenue/reports');
+
+      const roomLabel = (room) => room
+        ? `Room ${room.room_number} — ${room.room_type}`
+        : 'No data yet';
+
+      grid.innerHTML = `
+        <div class="report-card">
+          <div class="rc-label">Most Booked Room</div>
+          <div class="rc-value" style="font-size:1.2rem;">${roomLabel(r.mostBooked)}</div>
+          <div class="rc-sub">${r.mostBooked ? r.mostBooked.booking_count + ' bookings' : ''}</div>
+        </div>
+
+        <div class="report-card">
+          <div class="rc-label">Least Booked Room</div>
+          <div class="rc-value" style="font-size:1.2rem;">${roomLabel(r.leastBooked)}</div>
+          <div class="rc-sub">${r.leastBooked ? r.leastBooked.booking_count + ' bookings' : ''}</div>
+        </div>
+
+        <div class="report-card">
+          <div class="rc-label">Highest Revenue Room</div>
+          <div class="rc-value" style="font-size:1.2rem;">${roomLabel(r.highestRevenueRoom)}</div>
+          <div class="rc-sub">${r.highestRevenueRoom ? '₹' + Number(r.highestRevenueRoom.revenue).toLocaleString('en-IN') + ' earned' : ''}</div>
+        </div>
+
+        <div class="report-card">
+          <div class="rc-label">Occupancy Rate</div>
+          <div class="rc-value">${r.occupancyRate}%</div>
+          <div class="rc-sub">of total rooms currently occupied</div>
+        </div>
+      `;
+
+    } catch (err) {
+      grid.innerHTML = `<p style="color:var(--danger);">Error: ${err.message}</p>`;
+    }
+  }
+
+  loadReports();
+
+</script>
+</body>
+</html>

@@ -3,339 +3,76 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Azure Haven – Admin Panel</title>
+  <title>Azure Haven – Admin Dashboard</title>
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
 </head>
 <body>
 
 <!-- ════════════════════════════════════════════
      ADMIN DASHBOARD
-     APIs used:
-       GET    /bookings/stats   → total rooms + bookings count
-       GET    /bookings/all     → all bookings with guest names
-       POST   /rooms            → add a room
-       PUT    /rooms/:id        → edit a room
-       DELETE /rooms/:id        → delete a room
+     API used: GET /bookings/stats
 ════════════════════════════════════════════ -->
 
-<!-- ── NAVBAR ────────────────────────────────── -->
-<nav class="navbar">
-  <span class="navbar-logo">AZURE HAVEN</span>
-  <div class="navbar-links">
-    <span class="muted-text" style="font-size:0.8rem; letter-spacing:1px;">ADMINISTRATOR</span>
-    <a href="#" onclick="logout()" style="margin-left:8px;">Logout</a>
-  </div>
-  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
-</nav>
+<div class="admin-shell">
+  <div id="admin-shell-mount"></div>
 
-<div class="mobile-nav" id="mobile-nav">
-  <a href="#" onclick="logout()">🚪 Logout</a>
+  <main class="admin-main">
+    <h1 class="admin-page-title">Dashboard</h1>
+    <p class="admin-page-sub">Live overview of Azure Haven's operations</p>
+
+    <!-- 7 metric cards -->
+    <div class="metrics-grid" id="metrics-grid">
+      <!-- filled by JS -->
+    </div>
+
+    <!-- admin-dashboard.html — replace the admin-table-wrap div at the bottom with: -->
+<div style="display:flex; justify-content:space-between; align-items:center; margin-top:28px;">
+  <p class="muted-text" style="font-size:0.85rem;">
+    💡 Data refreshes each time you visit. Click refresh to update now.
+  </p>
+  <button class="btn btn-outline btn-sm" onclick="loadStats()">↻ Refresh</button>
+</div>
+  </main>
 </div>
 
-<!-- ── MAIN CONTENT ───────────────────────────── -->
-<main class="page-wrap">
-
-  <!-- Page title -->
-  <div class="page-header text-center">
-    <h1 class="page-title gold-text uppercase-wide">Admin Panel</h1>
-  </div>
-
-  <!-- ─ STATS CARDS ─────────────────────────── -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Inventory</div>
-      <div class="stat-number" id="stat-rooms">—</div>
-      <div class="stat-desc">Total Rooms</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Activity</div>
-      <div class="stat-number" id="stat-bookings">—</div>
-      <div class="stat-desc">Total Bookings</div>
-    </div>
-  </div>
-
-  <!-- ─ ACTION BUTTONS ──────────────────────── -->
-  <div class="action-grid">
-    <button class="action-btn" onclick="openPanel('add-panel')">
-      🏠<br>ADD ROOM
-    </button>
-    <button class="action-btn" onclick="openPanel('edit-panel')">
-      ✏️<br>EDIT ROOM
-    </button>
-    <button class="action-btn" onclick="openPanel('delete-panel')">
-      🗑️<br>DELETE ROOM
-    </button>
-  </div>
-
-  <!-- ─ ADD ROOM FORM PANEL ─────────────────── -->
-  <div class="form-panel" id="add-panel">
-    <h3 class="form-panel-title">Add New Room</h3>
-    <div id="add-msg" class="alert"></div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Room Number</label>
-        <input class="form-control" type="text" id="add-number" placeholder="e.g. 106" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Room Type</label>
-        <input class="form-control" type="text" id="add-type" placeholder="e.g. Deluxe Suite" />
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Price per Night (₹)</label>
-        <input class="form-control" type="number" id="add-price" placeholder="e.g. 4500" min="1" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Description (optional)</label>
-        <input class="form-control" type="text" id="add-desc" placeholder="Short description" />
-      </div>
-    </div>
-
-    <div style="display:flex; gap:12px; margin-top:4px;">
-      <button class="btn btn-gold" onclick="doAddRoom()">Add Room</button>
-      <button class="btn btn-outline" onclick="closeAllPanels()">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ─ EDIT ROOM FORM PANEL ────────────────── -->
-  <div class="form-panel" id="edit-panel">
-    <h3 class="form-panel-title">Edit Existing Room</h3>
-    <div id="edit-msg" class="alert"></div>
-    <p class="muted-text" style="margin-bottom:16px; font-size:0.85rem;">
-      Fill in only the fields you want to change. Room ID is required.
-    </p>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Room ID <span style="color:var(--gold)">*</span></label>
-        <input class="form-control" type="number" id="edit-id" placeholder="Enter Room ID" min="1" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">New Room Number</label>
-        <input class="form-control" type="text" id="edit-number" placeholder="e.g. 107" />
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">New Room Type</label>
-        <input class="form-control" type="text" id="edit-type" placeholder="e.g. Ocean Suite" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">New Price (₹)</label>
-        <input class="form-control" type="number" id="edit-price" placeholder="e.g. 7000" min="1" />
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">New Description</label>
-      <input class="form-control" type="text" id="edit-desc" placeholder="Updated description" />
-    </div>
-
-    <div style="display:flex; gap:12px; margin-top:4px;">
-      <button class="btn btn-gold" onclick="doEditRoom()">Update Room</button>
-      <button class="btn btn-outline" onclick="closeAllPanels()">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ─ DELETE ROOM FORM PANEL ─────────────── -->
-  <div class="form-panel" id="delete-panel">
-    <h3 class="form-panel-title">Delete Room</h3>
-    <div id="delete-msg" class="alert"></div>
-    <p class="muted-text" style="margin-bottom:16px; font-size:0.85rem;">
-      ⚠️ This action cannot be undone. Enter the Room ID to delete.
-    </p>
-    <div class="form-group" style="max-width:220px;">
-      <label class="form-label">Room ID <span style="color:var(--gold)">*</span></label>
-      <input class="form-control" type="number" id="delete-id" placeholder="Enter Room ID" min="1" />
-    </div>
-    <div style="display:flex; gap:12px; margin-top:4px;">
-      <button class="btn btn-delete" onclick="doDeleteRoom()">🗑 Delete Room</button>
-      <button class="btn btn-outline" onclick="closeAllPanels()">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ─ ALL BOOKINGS PANEL ──────────────────── -->
-  <div class="panel">
-    <div class="panel-header">
-      <h3>Bookings List</h3>
-      <span class="panel-tag">Active Records</span>
-    </div>
-    <div id="bookings-list"></div>
-  </div>
-
-</main>
-
-<footer class="footer">
-  &copy; 2024 Azure Haven Resort &amp; Spa — Administrator Panel
-</footer>
-
 <script src="js/api.js"></script>
+<script src="js/admin-sidebar.js"></script>
 <script>
 
-  // ── Auth guard (admin only) ────────────────────
   requireAdmin();
 
-  const toggleMenu = () => document.getElementById('mobile-nav').classList.toggle('open');
-
-  // ── Panel helpers ──────────────────────────────
-  const allPanels = ['add-panel', 'edit-panel', 'delete-panel'];
-
-  function openPanel(id) {
-    allPanels.forEach(p => {
-      document.getElementById(p).classList.toggle('open', p === id);
-    });
-    // Scroll to the panel
-    document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  function closeAllPanels() {
-    allPanels.forEach(p => document.getElementById(p).classList.remove('open'));
-  }
-
-  // ── Load dashboard data ────────────────────────
-  async function loadDashboard() {
-
-    // 1. Stats
-    try {
-      const stats = await apiFetch('/bookings/stats');
-      document.getElementById('stat-rooms').textContent    = stats.totalRooms;
-      document.getElementById('stat-bookings').textContent = stats.totalBookings;
-    } catch (err) {
-      console.error('Stats error:', err.message);
-    }
-
-    // 2. All bookings
-    const list = document.getElementById('bookings-list');
-    list.innerHTML = spinnerHTML();
+  async function loadStats() {
+    const grid = document.getElementById('metrics-grid');
+    grid.innerHTML = spinnerHTML();
 
     try {
-      const { bookings } = await apiFetch('/bookings/all');
+      const s = await apiFetch('/bookings/stats');
 
-      if (!bookings.length) {
-        list.innerHTML = `<p class="muted-text">No bookings yet.</p>`;
-        return;
-      }
+      const cards = [
+        { label: 'Total Rooms',        value: s.totalRooms,    icon: '🏨' },
+        { label: 'Total Bookings',     value: s.totalBookings, icon: '📋' },
+        { label: 'Available Rooms',    value: s.availableRooms, icon: '✅' },
+        { label: 'Occupied Rooms',     value: s.occupiedRooms, icon: '🛏' },
+        { label: "Today's Check-ins",  value: s.todayCheckIns, icon: '➡️' },
+        { label: "Today's Check-outs", value: s.todayCheckOuts, icon: '⬅️' },
+        { label: 'Revenue (this month)', value: `₹${Number(s.monthlyRevenue).toLocaleString('en-IN')}`, icon: '💰', accent: true },
+      ];
 
-      list.innerHTML = bookings.map(b => `
-        <div class="b-row">
-          <div class="b-row-left">
-            <div class="guest-name">${b.guest_name}</div>
-            <div class="room-info">Room ${b.room_number} — ${b.room_type}</div>
-          </div>
-          <div class="b-row-right">
-            <div class="b-dates">
-              ${fmtDate(b.check_in)} &rarr; ${fmtDate(b.check_out)}
-            </div>
-            <div style="display:flex; align-items:center; gap:8px; justify-content:flex-end; margin-top:4px;">
-              <span class="badge badge-${b.status}">${b.status.toUpperCase()}</span>
-              <span class="b-id">#BK-${String(b.id).padStart(4,'0')}</span>
-            </div>
-          </div>
+      grid.innerHTML = cards.map(c => `
+        <div class="metric-card ${c.accent ? 'accent' : ''}">
+          <div class="metric-icon">${c.icon}</div>
+          <div class="metric-label">${c.label}</div>
+          <div class="metric-value">${c.value}</div>
         </div>
       `).join('');
 
     } catch (err) {
-      list.innerHTML = `<p style="color:var(--danger);">Could not load bookings: ${err.message}</p>`;
+      grid.innerHTML = `<p style="color:var(--danger);">Could not load dashboard: ${err.message}</p>`;
     }
   }
 
-  // ── ADD ROOM ───────────────────────────────────
-  async function doAddRoom() {
-    hideAlert('add-msg');
-
-    const room_number = document.getElementById('add-number').value.trim();
-    const room_type   = document.getElementById('add-type').value.trim();
-    const price       = Number(document.getElementById('add-price').value);
-    const description = document.getElementById('add-desc').value.trim();
-
-    if (!room_number || !room_type || !price) {
-      return showAlert('add-msg', 'Room number, type and price are required.');
-    }
-    if (price <= 0) {
-      return showAlert('add-msg', 'Price must be greater than 0.');
-    }
-
-    try {
-      const data = await apiFetch('/rooms', {
-        method: 'POST',
-        body: JSON.stringify({ room_number, room_type, price, description })
-      });
-
-      showAlert('add-msg', `✅ ${data.message}`, 'success');
-      // Clear the form
-      ['add-number','add-type','add-price','add-desc'].forEach(id => {
-        document.getElementById(id).value = '';
-      });
-      loadDashboard();
-
-    } catch (err) {
-      showAlert('add-msg', err.message);
-    }
-  }
-
-  // ── EDIT ROOM ──────────────────────────────────
-  async function doEditRoom() {
-    hideAlert('edit-msg');
-
-    const id          = document.getElementById('edit-id').value.trim();
-    const room_number = document.getElementById('edit-number').value.trim();
-    const room_type   = document.getElementById('edit-type').value.trim();
-    const price       = document.getElementById('edit-price').value;
-    const description = document.getElementById('edit-desc').value.trim();
-
-    if (!id) return showAlert('edit-msg', 'Room ID is required.');
-
-    // Build only the fields that were filled in
-    const body = {};
-    if (room_number) body.room_number = room_number;
-    if (room_type)   body.room_type   = room_type;
-    if (price)       body.price       = Number(price);
-    if (description) body.description = description;
-
-    if (!Object.keys(body).length) {
-      return showAlert('edit-msg', 'Please fill in at least one field to update.');
-    }
-
-    try {
-      const data = await apiFetch(`/rooms/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(body)
-      });
-
-      showAlert('edit-msg', `✅ ${data.message}`, 'success');
-      loadDashboard();
-
-    } catch (err) {
-      showAlert('edit-msg', err.message);
-    }
-  }
-
-  // ── DELETE ROOM ────────────────────────────────
-  async function doDeleteRoom() {
-    hideAlert('delete-msg');
-    const id = document.getElementById('delete-id').value.trim();
-
-    if (!id) return showAlert('delete-msg', 'Please enter a Room ID.');
-
-    if (!confirm(`⚠️ Permanently delete Room ID ${id}? This cannot be undone.`)) return;
-
-    try {
-      const data = await apiFetch(`/rooms/${id}`, { method: 'DELETE' });
-
-      showAlert('delete-msg', `✅ ${data.message}`, 'success');
-      document.getElementById('delete-id').value = '';
-      loadDashboard();
-
-    } catch (err) {
-      showAlert('delete-msg', err.message);
-    }
-  }
-
-  // ── Init ───────────────────────────────────────
-  loadDashboard();
+  loadStats();
 
 </script>
 </body>

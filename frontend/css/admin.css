@@ -1,0 +1,486 @@
+/* ================================================
+   admin.css  –  Enhanced Admin Panel Styles
+   Loads ALONGSIDE style.css (do not remove that file)
+   Uses the same --navy / --gold variables already
+   defined in style.css
+   ================================================ */
+
+/* ── ADMIN LAYOUT SHELL ───────────────────────── */
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── SIDEBAR ──────────────────────────────────── */
+.admin-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--navy-card, #161f2e);
+  border-right: 1px solid var(--gold-border, rgba(201,168,76,0.25));
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar-brand {
+  padding: 26px 22px 20px;
+  border-bottom: 1px solid var(--gold-border, rgba(201,168,76,0.2));
+}
+
+.sidebar-brand .brand-name {
+  color: var(--gold, #c9a84c);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+.sidebar-brand .brand-role {
+  color: var(--text-muted, #8892a0);
+  font-size: 0.68rem;
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 14px 12px;
+  overflow-y: auto;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  color: var(--text-light, #c8d0dc);
+  font-size: 0.9rem;
+  margin-bottom: 3px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-link .icon { font-size: 1.05rem; width: 20px; text-align: center; }
+
+.sidebar-link:hover {
+  background: rgba(201,168,76,0.08);
+  color: var(--gold, #c9a84c);
+}
+
+.sidebar-link.active {
+  background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.08));
+  color: var(--gold, #c9a84c);
+  font-weight: 600;
+  border-left: 3px solid var(--gold, #c9a84c);
+  padding-left: 11px;
+}
+
+.sidebar-footer {
+  padding: 14px 12px 20px;
+  border-top: 1px solid var(--gold-border, rgba(201,168,76,0.2));
+}
+
+.sidebar-footer .sidebar-link {
+  color: #fca5a5;
+}
+.sidebar-footer .sidebar-link:hover {
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+}
+
+/* ── MOBILE TOPBAR (shown instead of sidebar on small screens) ── */
+.admin-topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--navy, #0d1117);
+  border-bottom: 1px solid var(--gold-border, rgba(201,168,76,0.25));
+  padding: 0 18px;
+  height: 58px;
+  position: sticky;
+  top: 0;
+  z-index: 600;
+}
+
+.admin-topbar .brand-name { color: var(--gold, #c9a84c); font-weight: 800; letter-spacing: 3px; font-size: 1rem; }
+
+.admin-hamburger {
+  background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; gap: 5px; padding: 6px;
+}
+.admin-hamburger span { width: 22px; height: 2px; background: var(--gold, #c9a84c); border-radius: 2px; }
+
+/* mobile drawer reusing sidebar styles */
+.admin-sidebar.mobile-drawer {
+  position: fixed;
+  left: -260px;
+  top: 0;
+  z-index: 700;
+  transition: left 0.25s ease;
+  box-shadow: 8px 0 30px rgba(0,0,0,0.5);
+}
+.admin-sidebar.mobile-drawer.open { left: 0; }
+
+.admin-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 650;
+}
+.admin-overlay.open { display: block; }
+
+/* ── MAIN CONTENT AREA ────────────────────────── */
+.admin-main {
+  flex: 1;
+  min-width: 0;
+  padding: 32px 36px 60px;
+}
+
+.admin-page-title {
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.admin-page-sub {
+  color: var(--text-muted, #8892a0);
+  font-size: 0.88rem;
+  margin-bottom: 28px;
+}
+
+/* ── METRIC CARDS (Dashboard) ─────────────────── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.metric-card {
+  background: var(--navy-card, #161f2e);
+  border: 1px solid var(--gold-border, rgba(201,168,76,0.25));
+  border-radius: 14px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card .metric-icon {
+  position: absolute;
+  top: 16px; right: 16px;
+  font-size: 1.4rem;
+  opacity: 0.5;
+}
+
+.metric-card .metric-label {
+  color: var(--text-muted, #8892a0);
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.metric-card .metric-value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--white, #fff);
+}
+
+.metric-card.accent .metric-value { color: var(--gold, #c9a84c); }
+
+/* ── TABLES ───────────────────────────────────── */
+.admin-table-wrap {
+  background: var(--navy-card, #161f2e);
+  border: 1px solid var(--gold-border, rgba(201,168,76,0.25));
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.admin-table thead {
+  background: rgba(201,168,76,0.06);
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 14px 18px;
+  color: var(--gold, #c9a84c);
+  font-size: 0.72rem;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--gold-border, rgba(201,168,76,0.2));
+}
+
+.admin-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td { border-bottom: none; }
+.admin-table tbody tr:hover { background: rgba(201,168,76,0.04); }
+
+/* room thumbnail used inside tables/lists */
+.room-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--gold-border, rgba(201,168,76,0.3));
+  flex-shrink: 0;
+}
+
+.room-thumb-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.room-thumb-cell .room-thumb-info .rt-number { font-weight: 600; font-size: 0.92rem; }
+.room-thumb-cell .room-thumb-info .rt-type   { color: var(--text-muted, #8892a0); font-size: 0.78rem; }
+
+/* ── STATUS PILLS / SELECT ────────────────────── */
+.status-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.status-available, .status-approved   { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.4); }
+.status-occupied,  .status-pending    { background: rgba(201,168,76,0.18); color: var(--gold, #c9a84c); border: 1px solid var(--gold, #c9a84c); }
+.status-maintenance, .status-cancelled{ background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
+.status-completed                     { background: rgba(136,146,160,0.12); color: var(--text-muted, #8892a0); border: 1px solid rgba(136,146,160,0.3); }
+
+.status-select {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--gold-border, rgba(201,168,76,0.3));
+  color: var(--white, #fff);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.status-select:focus { border-color: var(--gold, #c9a84c); }
+
+/* ── ACTION BUTTON GROUPS (in tables) ─────────── */
+.row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.mini-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.mini-btn:hover { opacity: 0.85; }
+
+.mini-btn-approve  { background: rgba(34,197,94,0.18);  color: #4ade80; }
+.mini-btn-complete { background: rgba(201,168,76,0.2);  color: var(--gold, #c9a84c); }
+.mini-btn-cancel   { background: rgba(239,68,68,0.15);  color: #f87171; }
+.mini-btn-view     { background: rgba(136,146,160,0.15); color: var(--text-light, #c8d0dc); }
+.mini-btn-block    { background: rgba(239,68,68,0.15);  color: #f87171; }
+.mini-btn-unblock  { background: rgba(34,197,94,0.15);  color: #4ade80; }
+.mini-btn-edit     { background: rgba(201,168,76,0.15); color: var(--gold, #c9a84c); }
+.mini-btn-delete   { background: rgba(239,68,68,0.15);  color: #f87171; }
+
+/* ── CARD GRID (Revenue + Reports) ────────────── */
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.report-card {
+  background: var(--navy-card, #161f2e);
+  border: 1px solid var(--gold-border, rgba(201,168,76,0.25));
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.report-card .rc-label {
+  color: var(--text-muted, #8892a0);
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.report-card .rc-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--gold, #c9a84c);
+  margin-bottom: 4px;
+}
+
+.report-card .rc-sub {
+  color: var(--text-light, #c8d0dc);
+  font-size: 0.85rem;
+}
+
+/* simple bar chart (Revenue page) */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 160px;
+  padding: 16px 8px 0;
+}
+
+.bar-chart .bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar-chart .bar {
+  width: 100%;
+  max-width: 36px;
+  background: linear-gradient(180deg, var(--gold-hover, #e0bb5f), var(--gold, #c9a84c));
+  border-radius: 4px 4px 0 0;
+  transition: height 0.4s ease;
+  min-height: 3px;
+}
+
+.bar-chart .bar-label {
+  margin-top: 8px;
+  font-size: 0.68rem;
+  color: var(--text-muted, #8892a0);
+}
+
+/* ── PROFILE MODAL (Customer detail) ──────────── */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--gold-border, rgba(201,168,76,0.2));
+}
+
+.profile-avatar {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--gold-dim, rgba(201,168,76,0.15));
+  color: var(--gold, #c9a84c);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.profile-detail-row {
+  display: flex; justify-content: space-between;
+  padding: 8px 0; font-size: 0.88rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.profile-detail-row span:first-child { color: var(--text-muted, #8892a0); }
+
+/* ── SETTINGS FORM SECTIONS ────────────────────── */
+.settings-section {
+  background: var(--navy-card, #161f2e);
+  border: 1px solid var(--gold-border, rgba(201,168,76,0.25));
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 20px;
+  max-width: 560px;
+}
+
+.settings-section h3 {
+  color: var(--gold, #c9a84c);
+  font-size: 1rem;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gold-border, rgba(201,168,76,0.2));
+}
+
+/* ── RESPONSIVE ───────────────────────────────── */
+@media (max-width: 1024px) {
+  .metrics-grid  { grid-template-columns: repeat(2, 1fr); }
+  .report-grid   { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar:not(.mobile-drawer) { display: none; }
+  .admin-topbar { display: flex; }
+  .admin-main   { padding: 22px 16px 48px; }
+
+  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .metric-card  { padding: 16px; }
+  .metric-card .metric-value { font-size: 1.5rem; }
+
+  .admin-table-wrap { overflow-x: auto; }
+  .admin-table      { min-width: 640px; }
+
+  .bar-chart { gap: 6px; }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid { grid-template-columns: 1fr; }
+}
+/* ── ROOM CARD IMAGES (rooms.html customer page) ── */
+.room-card-img-wrap {
+  position: relative;
+  width: 140px;         /* same width column as the old badge area */
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.room-card-img {
+  width: 140px;
+  height: 100px;
+  object-fit: cover;
+  display: block;
+}
+
+.room-img-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.available-badge { background: rgba(34,197,94,0.9); color: #fff; }
+.occupied-badge  { background: rgba(239,68,68,0.9);  color: #fff; }
+
+/* Keep room-card layout consistent — flex row */
+.room-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: var(--navy-card, #161f2e);
+  border: 1px solid var(--gold-border, rgba(201,168,76,0.2));
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 600px) {
+  .room-card { flex-direction: column; align-items: flex-start; }
+  .room-card-img-wrap { width: 100%; }
+  .room-card-img { width: 100%; height: 160px; }
+}
