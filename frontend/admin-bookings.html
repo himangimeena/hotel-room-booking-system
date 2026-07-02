@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azure Haven – Booking Management</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     BOOKING MANAGEMENT
+     APIs used:
+       GET   /bookings/all
+       PATCH /bookings/:id/approve
+       PATCH /bookings/:id/complete
+       PATCH /bookings/:id/cancel
+════════════════════════════════════════════ -->
+
+<div class="admin-shell">
+  <div id="admin-shell-mount"></div>
+
+  <main class="admin-main">
+    <h1 class="admin-page-title">Booking Management</h1>
+    <p class="admin-page-sub">Review and manage every reservation</p>
+
+    <!-- Filter tabs -->
+    <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+      <button class="btn btn-sm" data-filter="all"        onclick="setFilter('all')">All</button>
+      <button class="btn btn-sm" data-filter="pending"    onclick="setFilter('pending')">Pending</button>
+      <button class="btn btn-sm" data-filter="approved"   onclick="setFilter('approved')">Approved</button>
+      <button class="btn btn-sm" data-filter="completed"  onclick="setFilter('completed')">Completed</button>
+      <button class="btn btn-sm" data-filter="cancelled"  onclick="setFilter('cancelled')">Cancelled</button>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Booking ID</th>
+            <th>Customer</th>
+            <th>Room</th>
+            <th>Check-In</th>
+            <th>Check-Out</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="bookings-tbody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/admin-sidebar.js"></script>
+<script src="js/room-images.js"></script>
+<script>
+
+  requireAdmin();
+document.addEventListener('DOMContentLoaded', () => setFilter('all'));
+
+  let allBookings = [];
+  let currentFilter = 'all';
+
+  function setFilter(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('[data-filter]').forEach(btn => {
+      btn.classList.toggle('btn-gold', btn.dataset.filter === filter);
+      btn.classList.toggle('btn-outline', btn.dataset.filter !== filter);
+    });
+    renderTable();
+  }
+
+  async function loadBookings() {
+    const tbody = document.getElementById('bookings-tbody');
+    tbody.innerHTML = `<tr><td colspan="7">${spinnerHTML()}</td></tr>`;
+
+    try {
+      const { bookings } = await apiFetch('/bookings/all');
+      allBookings = bookings;
+      setFilter('all');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); padding:20px;">Error: ${err.message}</td></tr>`;
+    }
+  }
+
+  function getActionButtons(b) {
+    if (b.status === 'pending') {
+      return `<button class="mini-btn mini-btn-approve" onclick="doAction(${b.id},'approve')">Approve</button>
+              <button class="mini-btn mini-btn-cancel" onclick="doAction(${b.id},'cancel')">Cancel</button>`;
+    }
+    if (b.status === 'approved') {
+      return `<button class="mini-btn mini-btn-complete" onclick="doAction(${b.id},'complete')">Complete</button>
+              <button class="mini-btn mini-btn-cancel" onclick="doAction(${b.id},'cancel')">Cancel</button>`;
+    }
+    return `<span class="muted-text" style="font-size:0.78rem;">—</span>`;
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('bookings-tbody');
+    const filtered = currentFilter === 'all'
+      ? allBookings
+      : allBookings.filter(b => b.status === currentFilter);
+
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="muted-text" style="padding:30px; text-align:center;">No bookings found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(b => `
+      <tr id="booking-row-${b.id}">
+        <td class="gold-text" style="font-weight:600;">#BK-${String(b.id).padStart(4,'0')}</td>
+        <td>
+          <div style="font-weight:600;">${b.guest_name}</div>
+          <div class="muted-text" style="font-size:0.78rem;">${b.guest_email}</div>
+        </td>
+        <td>
+          <div class="room-thumb-cell">
+            <img class="room-thumb" src="${getRoomImage(b.room_type)}" alt="${b.room_type}" style="width:40px;height:40px;" />
+            <div class="room-thumb-info">
+              <div class="rt-number">Room ${b.room_number}</div>
+              <div class="rt-type">${b.room_type}</div>
+            </div>
+          </div>
+        </td>
+        <td>${fmtDate(b.check_in)}</td>
+        <td>${fmtDate(b.check_out)}</td>
+        <td><span class="status-pill status-${b.status}">${b.status}</span></td>
+        <td><div class="row-actions">${getActionButtons(b)}</div></td>
+      </tr>
+    `).join('');
+  }
+
+  async function doAction(id, action) {
+    const labels = { approve: 'approve', complete: 'mark as completed', cancel: 'cancel' };
+    if (!confirm(`Are you sure you want to ${labels[action]} this booking?`)) return;
+
+    try {
+      await apiFetch(`/bookings/${id}/${action}`, { method: 'PATCH' });
+      loadBookings();
+    } catch (err) {
+      alert(`Could not ${action} booking: ${err.message}`);
+    }
+  }
+
+  loadBookings();
+
+</script>
+</body>
+</html>

@@ -78,20 +78,18 @@
   &copy; 2024 Azure Haven Resort &amp; Spa — All rights reserved
 </footer>
 
+<!-- rooms.html — ADD this BEFORE the closing </body> tag -->
+<!-- Must load room-images.js so getRoomImage() is available -->
 <script src="js/api.js"></script>
+<script src="js/room-images.js"></script>  <!-- ← ADD THIS LINE -->
 <script>
 
-  // ── Auth guard ─────────────────────────────────
   requireLogin();
-
-  // ── State ──────────────────────────────────────
   let selectedRoomId = null;
 
-  // ── Hamburger menu ─────────────────────────────
-  const toggleMenu  = () => document.getElementById('mobile-nav').classList.toggle('open');
-  const closeMenu   = () => document.getElementById('mobile-nav').classList.remove('open');
+  const toggleMenu = () => document.getElementById('mobile-nav').classList.toggle('open');
+  const closeMenu  = () => document.getElementById('mobile-nav').classList.remove('open');
 
-  // ── Load rooms on page open ────────────────────
   async function loadRooms() {
     const list = document.getElementById('rooms-list');
     list.innerHTML = spinnerHTML();
@@ -108,25 +106,28 @@
         return;
       }
 
-      // Room type → emoji map for visual flair
-      const icons = {
-        'Single Room'       : '🛏',
-        'Double Room'       : '🛏🛏',
-        'Deluxe Suite'      : '✨',
-        'Ocean View'        : '🌊',
-        'Presidential Suite': '👑',
-      };
-
+      // ── STATUS BADGE: only show "Occupied" badge; don't show available rooms
+      //    that are occupied (backend already filters maintenance rooms out)
       list.innerHTML = rooms.map(room => `
         <div class="room-card">
 
-          <div class="room-card-badge">
-            ${icons[room.room_type] || '🏨'}
+          <!-- FIXED: real image instead of emoji badge -->
+          <div class="room-card-img-wrap">
+            <img
+              class="room-card-img"
+              src="${getRoomImage(room.room_type)}"
+              alt="${room.room_type}"
+              onerror="this.src='images/rooms/single-room.jpg'"
+            />
+            ${room.status === 'occupied'
+              ? `<span class="room-img-badge occupied-badge">Occupied</span>`
+              : `<span class="room-img-badge available-badge">Available</span>`
+            }
           </div>
 
           <div class="room-card-body">
             <h3>Room ${room.room_number}</h3>
-            <p>${room.room_type}</p>
+            <p class="room-type-label">${room.room_type}</p>
             ${room.description
               ? `<p class="room-card-desc">${room.description}</p>`
               : ''}
@@ -135,12 +136,15 @@
           <div class="room-card-right">
             <span class="room-price">
               ₹${Number(room.price).toLocaleString('en-IN')}
-              <small style="font-size:0.7rem; font-weight:400;">/night</small>
+              <small>/night</small>
             </span>
             <button
               class="btn btn-gold btn-sm"
-              onclick="openModal(${room.id}, '${room.room_number}')">
-              Book Now
+              ${room.status === 'occupied' ? 'disabled title="Currently occupied"' : ''}
+              onclick="${room.status !== 'occupied'
+                ? `openModal(${room.id}, '${room.room_number}')`
+                : 'void(0)'}">
+              ${room.status === 'occupied' ? 'Unavailable' : 'Book Now'}
             </button>
           </div>
 
@@ -152,13 +156,12 @@
         <div class="empty-state">
           <div class="empty-state-icon">⚠️</div>
           <p style="color:#ef4444;">Could not load rooms.<br>
-             Make sure the backend server is running.<br>
              <small>${err.message}</small></p>
         </div>`;
     }
   }
 
-  // ── Modal helpers ──────────────────────────────
+  // ── Modal helpers (unchanged) ─────────────────────────────
   function openModal(roomId, roomName) {
     selectedRoomId = roomId;
     document.getElementById('modal-room-name').textContent = roomName;
@@ -175,49 +178,33 @@
     selectedRoomId = null;
   }
 
-  // Close modal when clicking the dark overlay (outside the box)
-  document.getElementById('booking-modal').addEventListener('click', function (e) {
+  document.getElementById('booking-modal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
   });
 
-  // ── Confirm booking ────────────────────────────
   async function confirmBooking() {
     hideAlert('modal-msg');
-
     const checkIn  = document.getElementById('check-in').value;
     const checkOut = document.getElementById('check-out').value;
 
-    if (!checkIn || !checkOut) {
+    if (!checkIn || !checkOut)
       return showAlert('modal-msg', 'Please select check-in and check-out dates.');
-    }
-    if (checkOut <= checkIn) {
+    if (checkOut <= checkIn)
       return showAlert('modal-msg', 'Check-out must be after check-in date.');
-    }
 
     try {
       const data = await apiFetch('/bookings', {
         method: 'POST',
-        body: JSON.stringify({
-          room_id:   selectedRoomId,
-          check_in:  checkIn,
-          check_out: checkOut
-        })
+        body: JSON.stringify({ room_id: selectedRoomId, check_in: checkIn, check_out: checkOut })
       });
-
       showAlert('modal-msg', `✅ ${data.message}`, 'success');
-      setTimeout(() => {
-        closeModal();
-        window.location.href = 'my-bookings.html';
-      }, 1800);
-
+      setTimeout(() => { closeModal(); window.location.href = 'my-bookings.html'; }, 1800);
     } catch (err) {
       showAlert('modal-msg', err.message);
     }
   }
 
-  // ── Init ───────────────────────────────────────
   loadRooms();
-
 </script>
 </body>
 </html>

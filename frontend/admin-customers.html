@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azure Haven – Customer Management</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     CUSTOMER MANAGEMENT
+     APIs used:
+       GET   /customers
+       GET   /customers/:id
+       PATCH /customers/:id/block
+════════════════════════════════════════════ -->
+
+<div class="admin-shell">
+  <div id="admin-shell-mount"></div>
+
+  <main class="admin-main">
+    <h1 class="admin-page-title">Customer Management</h1>
+    <p class="admin-page-sub">View guest accounts and booking activity</p>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Total Bookings</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="customers-tbody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- ── PROFILE MODAL ──────────────────────────── -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal-box" style="max-width:520px; max-height:85vh; overflow-y:auto;">
+    <div id="profile-content">
+      <!-- filled by JS -->
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeProfile()" style="width:100%;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/admin-sidebar.js"></script>
+<script>
+
+  // In admin-customers.html's <script> block:
+
+// FIXED: explicitly parse to boolean before sending
+async function toggleBlock(customerId, currentlyBlocked) {
+  const newState   = !currentlyBlocked;          // true = block, false = unblock
+  const actionWord = newState ? 'block' : 'unblock';
+
+  if (!confirm(`Are you sure you want to ${actionWord} this customer?`)) return;
+
+  try {
+    await apiFetch(`/customers/${customerId}/block`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_blocked: newState })   // ← sends actual boolean
+    });
+    loadCustomers();  // refresh table
+  } catch (err) {
+    alert(`Could not ${actionWord} customer: ${err.message}`);
+  }
+}
+
+// In your renderTable, use data attributes instead of inline strings:
+// <button class="mini-btn" onclick="toggleBlock(${c.id}, ${!!c.is_blocked})">
+//   ${c.is_blocked ? 'Unblock' : 'Block'}
+// </button>
+
+</script>
+</body>
+</html>

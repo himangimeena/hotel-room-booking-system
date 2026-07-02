@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azure Haven – Settings</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     SETTINGS PAGE
+     APIs used:
+       GET /settings
+       PUT /settings
+       PUT /settings/password
+════════════════════════════════════════════ -->
+
+<div class="admin-shell">
+  <div id="admin-shell-mount"></div>
+
+  <main class="admin-main">
+    <h1 class="admin-page-title">Settings</h1>
+    <p class="admin-page-sub">Manage hotel information and account security</p>
+
+    <!-- Hotel Information -->
+    <div class="settings-section">
+      <h3>Hotel Information</h3>
+      <div id="hotel-msg" class="alert"></div>
+
+      <div class="form-group">
+        <label class="form-label">Hotel Name</label>
+        <input class="form-control" type="text" id="hotel-name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contact Phone</label>
+        <input class="form-control" type="text" id="hotel-phone" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contact Email</label>
+        <input class="form-control" type="email" id="hotel-email" />
+      </div>
+
+      <button class="btn btn-gold" onclick="saveHotelInfo()">Save Changes</button>
+    </div>
+
+    <!-- Change Password -->
+    <div class="settings-section">
+      <h3>Change Admin Password</h3>
+      <div id="pwd-msg" class="alert"></div>
+
+      <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <input class="form-control" type="password" id="current-pwd" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input class="form-control" type="password" id="new-pwd" placeholder="Min. 6 characters" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <input class="form-control" type="password" id="confirm-pwd" />
+      </div>
+
+      <button class="btn btn-gold" onclick="changePassword()">Update Password</button>
+    </div>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/admin-sidebar.js"></script>
+<script>
+
+  requireAdmin();
+
+  // ── Load current settings ──────────────────────
+  async function loadSettings() {
+    try {
+      const s = await apiFetch('/settings');
+      document.getElementById('hotel-name').value  = s.hotel_name || '';
+      document.getElementById('hotel-phone').value = s.contact_phone || '';
+      document.getElementById('hotel-email').value = s.contact_email || '';
+    } catch (err) {
+      showAlert('hotel-msg', `Could not load settings: ${err.message}`);
+    }
+  }
+
+  // ── Save hotel info ─────────────────────────────
+  async function saveHotelInfo() {
+    hideAlert('hotel-msg');
+    const hotel_name    = document.getElementById('hotel-name').value.trim();
+    const contact_phone = document.getElementById('hotel-phone').value.trim();
+    const contact_email = document.getElementById('hotel-email').value.trim();
+
+    if (!hotel_name || !contact_email) {
+      return showAlert('hotel-msg', 'Hotel name and contact email are required.');
+    }
+
+    try {
+      const data = await apiFetch('/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ hotel_name, contact_phone, contact_email })
+      });
+      showAlert('hotel-msg', `✅ ${data.message}`, 'success');
+    } catch (err) {
+      showAlert('hotel-msg', err.message);
+    }
+  }
+
+  // ── Change password ─────────────────────────────
+  async function changePassword() {
+    hideAlert('pwd-msg');
+    const current_password = document.getElementById('current-pwd').value;
+    const new_password     = document.getElementById('new-pwd').value;
+    const confirm           = document.getElementById('confirm-pwd').value;
+
+    if (!current_password || !new_password || !confirm) {
+      return showAlert('pwd-msg', 'Please fill in all password fields.');
+    }
+    if (new_password.length < 6) {
+      return showAlert('pwd-msg', 'New password must be at least 6 characters.');
+    }
+    if (new_password !== confirm) {
+      return showAlert('pwd-msg', 'New passwords do not match.');
+    }
+
+    try {
+      const data = await apiFetch('/settings/password', {
+        method: 'PUT',
+        body: JSON.stringify({ current_password, new_password })
+      });
+      showAlert('pwd-msg', `✅ ${data.message}`, 'success');
+      ['current-pwd','new-pwd','confirm-pwd'].forEach(id => document.getElementById(id).value = '');
+    } catch (err) {
+      showAlert('pwd-msg', err.message);
+    }
+  }
+
+  loadSettings();
+
+</script>
+</body>
+</html>
